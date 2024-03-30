@@ -1,8 +1,12 @@
 import pandas as pd
 
-file_path = 'data_set.xlsx'
-
-df = pd.read_excel(file_path)
+def read_data(file_path):
+    try:
+        df = pd.read_excel(file_path)
+        return df
+    except FileNotFoundError:
+        print("File not found.")
+        return None
 
 impression_multipliers = {"SF": {"HZ": 1650, "OZ": 1075}, "LA": {"HZ": 1050, "OZ": 650}, "NY": {"HZ": 2500, "OZ": 1300}, "CHI": {"HZ": 850, "OZ": 450}, "DAL": {"HZ": 704, "OZ": 450}}
 
@@ -39,7 +43,7 @@ def calculate_cost(dh_list):
 
     return cost
 
-def recruit_drivers():
+def recruit_drivers(df):
     profits_by_city = {city: [] for city in df["City"].unique()}
 
     for index, row in df.iterrows():
@@ -60,7 +64,7 @@ def recruit_drivers():
             print(f"{i}. {driver}: ${profit}")
         print()
 
-def uninstall_drivers():
+def uninstall_drivers(df):
     profits = []
 
     for index, row in df.iterrows():
@@ -80,7 +84,7 @@ def uninstall_drivers():
         driver, profit = profits[i]
         print(f"{driver}: ${profit}")
 
-def calculate_most_profitable_city():
+def calculate_most_profitable_city(df):
     city_profits = {}
 
     for city in df["City"].unique():
@@ -99,8 +103,10 @@ def calculate_most_profitable_city():
 
 
 if __name__ == "__main__":
-    recruit_drivers()
-    uninstall_drivers()
-    calculate_most_profitable_city()
-
+    file_path = 'data/data_set.xlsx'
+    df = read_data(file_path)
+    if df is not None:
+        recruit_drivers(df)
+        uninstall_drivers(df)
+        calculate_most_profitable_city(df)
 
