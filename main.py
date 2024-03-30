@@ -1,4 +1,6 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 def read_data(file_path):
     try:
@@ -101,6 +103,21 @@ def calculate_most_profitable_city(df):
 
     print(f"The most profitable city based on 5 weeks of data is {most_profitable_city} with a total profit of ${city_profits[most_profitable_city]}")
 
+def process_drivers(df):
+    all_drivers = []
+
+    for index, row in df.iterrows():
+        i_hot_zone, i_other_zone = calculate_impressions([row[f'Week {i}_DrivingHours'] for i in range(1, 6)], [row[f'Week {i}_HotZone'] for i in range(1, 6)], row["City"])
+
+        profit = calculate_profit(i_hot_zone, i_other_zone, row["City"])
+        cost = calculate_cost([row[f'Week {i}_DrivingHours'] for i in range(1, 6)])
+
+        total_profit = profit - cost
+        all_drivers.append((row["Drivers"], row["Driver Status"], row["City"], total_profit))
+
+    df_all = pd.DataFrame(all_drivers, columns=["Drivers", "Status", "City", "Total Profit"])
+
+    return df_all
 
 if __name__ == "__main__":
     file_path = 'data/data_set.xlsx'
@@ -109,4 +126,25 @@ if __name__ == "__main__":
         recruit_drivers(df)
         uninstall_drivers(df)
         calculate_most_profitable_city(df)
+
+        all_drivers_df = process_drivers(df)
+        all_drivers_df.to_excel('data/all_drivers.xlsx', index=False)
+        
+        city_profits = all_drivers_df.groupby('City')['Total Profit'].sum()
+        city_profits.plot(kind='bar', color='skyblue')
+        plt.title('Total Profit by City')
+        plt.xlabel('City')
+        plt.ylabel('Total Profit ($)')
+        plt.xticks(rotation=45)
+        
+        def format_func(value, tick_number):
+            if value >= 1000:
+                value /= 1000
+                return f'{value:,.0f}K'
+            else:
+                return f'{value:,.0f}'
+        
+        plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(format_func))
+        
+        plt.show()
 
